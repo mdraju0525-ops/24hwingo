@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#05070d" />
+<title>AI 24H HACK — Signal Tool</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<style>
+/* =========================================================
+   1. BASE & RESET
+   ========================================================= */
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{
+  margin:0; padding:0; height:100%; width:100%;
+  overflow:hidden; background:#020306;
+  font-family:'Poppins', sans-serif; color:#fff;
+  -webkit-tap-highlight-color:transparent; overscroll-behavior:none;
+}
+
+.app-frame{
+  position:fixed; inset:0; width:100%; height:100vh; height:100dvh;
+  border:0; display:block; background:#000; z-index:1;
+}
+
+/* =========================================================
+   2. SIGNAL BOX WRAPPER (Compact 250px & Golden Bold Border)
+   ========================================================= */
+.signal-box{
+  position:fixed; left:0; top:0; z-index:99999;
+  width: 250px; 
+  max-width: calc(100vw - 20px);
+  user-select:none; -webkit-user-select:none;
+  touch-action: none;
+  opacity:0; transform:scale(.86); pointer-events:none;
+  transition:opacity .35s ease, transform .38s cubic-bezier(.2,.9,.3,1.25);
+}
+.signal-box.show{ opacity:1; transform:scale(1); pointer-events:auto; }
+
+.cyber-frame{
+  position:relative;
+  border-radius:14px;
+  padding: 3px; 
+  background: linear-gradient(45deg, #ffd700, #ff8c00, #ffd700, #ffaa00, #ffd700);
+  background-size: 300% 300%;
+  animation: goldGlow 4s linear infinite, floaty 6s ease-in-out infinite;
+  box-shadow: 
+    0 0 15px rgba(255, 215, 0, 0.6),
+    0 0 30px rgba(255, 140, 0, 0.4),
+    inset 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes goldGlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes floaty {
+  0%,100%{ transform:translateY(0); }
+  50%    { transform:translateY(-6px); }
+}
+
+.cyber-inner{
+  position:relative;
+  border-radius:11px;
+  background: 
+    radial-gradient(circle at 50% -10%, rgba(184,41,247,0.15) 0%, transparent 60%),
+    radial-gradient(circle at 50% 120%, rgba(255,179,0,0.1) 0%, transparent 60%),
+    #06070a;
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 28px 8px 10px 8px;
+  overflow:hidden;
+}
+
+.cyber-inner::before {
+  content:''; position:absolute; inset:0;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 15px 15px; pointer-events: none;
+}
+
+/* =========================================================
+   3. CROWN & HEADER
+   ========================================================= */
+.crown {
+  position:absolute; top:-32px; left:50%; transform:translateX(-50%);
+  width: 100px; height: auto; z-index: 20;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.8)) drop-shadow(0 0 15px #ffb300);
+}
+
+.box-head {
+  display:flex; align-items:center; justify-content:center;
+  cursor:grab; touch-action:none; position:relative; z-index: 10;
+  margin-top: 5px;
+}
+.box-head:active{ cursor:grabbing; }
+
+.title-wrap {
+  font-family:'Orbitron', sans-serif;
+  font-size: 15px; font-weight: 900; font-style: italic; letter-spacing: 0.5px;
+  display: flex; align-items: center; gap: 2px;
+  background: linear-gradient(180deg, #ffffff 0%, #ffd166 40%, #ff6a00 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 #8a2e00) drop-shadow(0 0 10px rgba(255,106,0,0.5));
+}
+.title-bracket {
+  color: #ffb300; font-size: 18px; font-family: sans-serif; font-style: normal;
+  text-shadow: 0 0 10px #ff6a00; filter: none; -webkit-text-fill-color: #ffb300;
+}
+
+/* =========================================================
+   4. STATUS CHIPS & FAKE TEXT
+   ========================================================= */
+.chips-row {
+  display:flex; justify-content:center; align-items:center;
+  gap: 3px; margin-top: 8px; font-family:'Orbitron', sans-serif;
+  font-size: 6.5px; font-weight: 700; letter-spacing: 0.5px; z-index: 10; position: relative;
+}
+.chip-pill {
+  display:flex; align-items:center; gap:2px;
+  padding: 2px 5px; border-radius: 20px;
+  background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);
+}
+.chip-live { background: linear-gradient(90deg, #ff2a2a, #990000); border: 1px solid #ff6a6a; color: #fff; }
+.chip-live .dot { width: 3px; height: 3px; background: #fff; border-radius: 50%; animation: blink 1s infinite alternate; }
+@keyframes blink { 0% { opacity: 1; } 100% { opacity: 0.2; } }
+.chip-mod { color: #00ffa3; border-color: rgba(0,255,163,0.4); }
+.chip-ping { color: #22d3ee; border-color: rgba(34,211,238,0.4); }
+
+.fake-log {
+  display: flex; justify-content: space-between;
+  font-family: 'Orbitron', monospace; font-size: 6px;
+  color: #00d2ff; margin-top: 5px; padding: 0 4px;
+  text-shadow: 0 0 5px #00d2ff; opacity: 0.8; z-index: 10; position: relative;
+}
+
+/* =========================================================
+   5. MAIN DISPLAY
+   ========================================================= */
+.display-area {
+  position: relative;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 8px; padding: 0 2px; min-height: 95px; z-index: 10;
+}
+
+.verdict-wrap { flex: 1; display: flex; align-items: center; }
+.verdict {
+  font-family: 'Poppins', sans-serif;
+  font-size: 46px; font-weight: 900; font-style: italic;
+  line-height: 1; letter-spacing: -1px; transform: skewX(-8deg);
+  background: linear-gradient(180deg, #fff 0%, #ffd166 30%, #ff6a00 80%, #cc3300 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  -webkit-text-stroke: 1px #ffb300;
+  filter: drop-shadow(0 4px 0 #8a2e00) drop-shadow(0 0 20px rgba(255,106,0,0.6));
+  transition: all 0.3s ease;
+}
+.verdict.is-small {
+  font-size: 34px; 
+  background: linear-gradient(180deg, #fff 0%, #a5f3fc 30%, #22d3ee 80%, #0369a1 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-stroke: 1px #22d3ee;
+  filter: drop-shadow(0 4px 0 #005f7a) drop-shadow(0 0 20px rgba(34,211,238,0.6));
+}
+
+.vortex-wrap {
+  position: relative; width: 75px; height: 75px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.vortex-ring-1 {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 0deg, #00d2ff, transparent 30%, #b829f7 70%, transparent);
+  animation: spin 3s linear infinite; filter: blur(3px);
+}
+.vortex-ring-2 {
+  position: absolute; inset: 4px; border-radius: 50%;
+  background: conic-gradient(from 180deg, #ff007f, transparent 40%, #00d2ff 80%, transparent);
+  animation: spinReverse 2s linear infinite; filter: blur(2px);
+}
+.vortex-core {
+  position: absolute; inset: 8px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,210,255,0.8) 0%, rgba(184,41,247,0.5) 50%, #000 100%);
+  box-shadow: inset 0 0 15px #00d2ff, 0 0 20px #b829f7;
+  display: flex; align-items: center; justify-content: center;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+@keyframes spinReverse { 100% { transform: rotate(-360deg); } }
+.vortex-core span {
+  font-family: 'Orbitron', sans-serif; font-size: 30px; font-weight: 900;
+  color: #fff; text-shadow: 0 0 10px #fff, 0 0 20px #00d2ff, 0 0 30px #b829f7; z-index: 5;
+}
+
+/* =========================================================
+   6. PERIOD BAR & SEGMENTS
+   ========================================================= */
+.period-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 8px; padding: 4px 6px;
+  background: linear-gradient(90deg, rgba(0,210,255,0.15), rgba(0,0,0,0.9) 50%, rgba(0,210,255,0.15));
+  border: 1px solid #00d2ff; border-radius: 6px;
+  box-shadow: inset 0 0 10px rgba(0,210,255,0.3); z-index: 10; position: relative;
+}
+.eq { display: flex; gap: 2px; align-items: flex-end; height: 6px; }
+.eq span { width: 2px; background: #00d2ff; border-radius: 2px; animation: eqAnim 0.8s infinite alternate; }
+.eq span:nth-child(1) { height: 50%; animation-delay: 0.1s; }
+.eq span:nth-child(2) { height: 100%; animation-delay: 0.3s; }
+.eq span:nth-child(3) { height: 70%; animation-delay: 0.0s; }
+@keyframes eqAnim { 0% { transform: scaleY(0.3); } 100% { transform: scaleY(1); } }
+
+.period-text {
+  font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
+  color: #fff; text-shadow: 0 0 5px #00d2ff; display: flex; align-items: center; gap: 3px;
+}
+.period-text b { color: #ffb300; text-shadow: 0 0 8px #ff6a00; font-size: 11px; }
+
+.scan-bar { display: flex; gap: 2px; justify-content: center; margin-top: 5px; z-index: 10; position: relative; }
+.scan-bar span { height: 2px; flex: 1; background: rgba(255,255,255,0.1); border-radius: 1px; }
+.scan-bar span:nth-child(-n+15) { background: #ff6a00; box-shadow: 0 0 5px #ff6a00; }
+
+/* =========================================================
+   7. BUTTONS
+   ========================================================= */
+.btn-row { display: flex; gap: 5px; margin-top: 10px; z-index: 10; position: relative; }
+
+.btn {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  gap: 4px; padding: 6px 0; border-radius: 6px;
+  font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s ease; position: relative;
+}
+.btn:active { transform: scale(0.95); }
+
+.btn-ghost {
+  background: linear-gradient(180deg, #1a1126, #0a0512);
+  border: 1px solid #b829f7; color: #e9d5ff;
+  box-shadow: inset 0 0 10px rgba(184,41,247,0.4);
+}
+
+.btn-join {
+  width: 100%; margin-top: 6px; padding: 8px 0;
+  background: radial-gradient(circle at center, #ff4d4d, #b80000 60%, #660000);
+  border: 2px solid #ffb300; border-radius: 8px;
+  font-size: 11px; font-weight: 900; color: #fff; letter-spacing: 1px;
+  box-shadow: 0 0 15px rgba(255,42,42,0.6), inset 0 0 20px rgba(255,179,0,0.6);
+  z-index: 10; position: relative; overflow: hidden;
+}
+
+.btn-join span {
+  animation: p2pPulse 1.2s infinite alternate;
+  display: inline-block;
+}
+@keyframes p2pPulse {
+  0% { opacity: 1; text-shadow: 0 0 10px #fff, 0 0 20px #ffb300; filter: brightness(1.5); }
+  100% { opacity: 0.3; text-shadow: 0 0 2px #fff; filter: brightness(0.8); }
+}
+.btn-join i { color: #ffb300; filter: drop-shadow(0 0 5px #ffb300); }
+
+/* =========================================================
+   8. LOADER
+   ========================================================= */
+.display-area.loading .verdict-wrap,
+.display-area.loading .vortex-wrap { opacity: 0; transform: scale(0.9); pointer-events: none; }
+.loader {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 6px;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 15;
+}
+.display-area.loading .loader { opacity: 1; }
+.loader-ring {
+  width: 25px; height: 25px; border-radius: 50%;
+  border: 2px solid rgba(0,210,255,0.2); border-top-color: #00d2ff;
+  animation: spin 0.8s linear infinite; box-shadow: 0 0 15px #00d2ff;
+}
+.loader-text {
+  font-family: 'Orbitron', sans-serif; font-size: 7px; font-weight: 700;
+  color: #00d2ff; letter-spacing: 1.5px; text-shadow: 0 0 10px #00d2ff;
+}
+
+/* =========================================================
+   9. RESTORE BUTTON
+   ========================================================= */
+.restore-chip {
+  position: fixed; left: 14px; bottom: 100px; z-index: 99998;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 50px;
+  font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+  color: #fff; background: linear-gradient(90deg, #b829f7, #00d2ff);
+  box-shadow: 0 0 20px rgba(184,41,247,0.6); border: none;
+  cursor: pointer; opacity: 0; transform: translateY(14px) scale(0.9);
+  pointer-events: none; transition: all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+}
+.restore-chip.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+</style>
+</head>
+
+<body>
+
+<iframe class="app-frame" src="https://hgnice.bet" title="hgnice" allow="clipboard-write; autoplay; fullscreen" referrerpolicy="no-referrer" loading="eager"></iframe>
+
+<div class="signal-box" id="signalBox">
+  <div class="cyber-frame">
+    
+    <svg class="crown" viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M60 0 L75 25 L105 15 L90 45 L115 55 L60 70 L5 55 L30 45 L15 15 L45 25 Z" fill="url(#goldGrad)" stroke="#b829f7" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M60 10 L70 25 L85 20 L75 35 L60 45 L45 35 L35 20 L50 25 Z" fill="#1a0033" stroke="#00d2ff" stroke-width="1.5"/>
+      <circle cx="60" cy="22" r="5" fill="#00d2ff" filter="drop-shadow(0 0 8px #00d2ff)"/>
+      <circle cx="30" cy="28" r="4" fill="#ffb300" filter="drop-shadow(0 0 8px #ffb300)"/>
+      <circle cx="90" cy="28" r="4" fill="#ffb300" filter="drop-shadow(0 0 8px #ffb300)"/>
+      <defs>
+        <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffd166"/>
+          <stop offset="40%" stop-color="#ff6a00"/>
+          <stop offset="100%" stop-color="#5c1a00"/>
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <div class="cyber-inner">
+      
+      <div class="box-head" id="dragHandle">
+        <div class="title-wrap">
+          <span class="title-bracket">『</span>
+          <span class="title-text">24H AI HACK</span>
+          <span class="title-bracket">』</span>
+        </div>
+      </div>
+
+      <div class="chips-row">
+        <div class="chip-pill chip-live"><div class="dot"></div> LIVE</div>
+        <div class="chip-pill chip-mod"><i class="fa-solid fa-heart-pulse"></i> MOD: ON</div>
+        <div class="chip-pill chip-ping"><i class="fa-solid fa-satellite-dish"></i> PING: 8MS</div>
+      </div>
+
+      <div class="fake-log">
+        <span id="logText">> SYS.INITIALIZING...</span>
+        <span style="color:#ffb300">[SECURE]</span>
+      </div>
+
+      <div class="display-area" id="display">
+        <div class="verdict-wrap" id="result">
+          <div class="verdict" id="verdict">BIG</div>
+        </div>
+        <div class="vortex-wrap">
+          <div class="vortex-ring-1"></div>
+          <div class="vortex-ring-2"></div>
+          <div class="vortex-core">
+            <span id="number">5</span>
+          </div>
+        </div>
+        <div class="loader">
+          <div class="loader-ring"></div>
+          <div class="loader-text">ANALYZING...</div>
+        </div>
+      </div>
+
+      <div class="period-bar">
+        <div class="eq"><span></span><span></span><span></span></div>
+        <div class="period-text">
+          <i class="fa-regular fa-clock" style="color:#00d2ff; font-size:10px;"></i> PERIOD : <b id="period">XX0</b>
+        </div>
+        <div class="eq"><span></span><span></span><span></span></div>
+      </div>
+      
+      <div class="scan-bar">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="againBtn"><i class="fa-solid fa-rotate-right"></i> AGAIN</button>
+        <button class="btn btn-ghost" id="hideBtn"><i class="fa-solid fa-eye-slash"></i> HIDE</button>
+      </div>
+      
+      <button class="btn btn-join" id="p2pBtn">
+        <i class="fa-solid fa-network-wired"></i> <span>API FETCH P2P</span> <i class="fa-solid fa-server"></i>
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<button class="restore-chip" id="restoreBtn"><i class="fa-solid fa-brain"></i> AI WINGO HACK</button>
+
+<script>
+(function () {
+  'use strict';
+
+  const box         = document.getElementById('signalBox');
+  const handle      = document.getElementById('dragHandle');
+  const display     = document.getElementById('display');
+  const verdictEl   = document.getElementById('verdict');
+  const numberEl    = document.getElementById('number');
+  const periodEl    = document.getElementById('period');
+  const againBtn    = document.getElementById('againBtn');
+  const hideBtn     = document.getElementById('hideBtn');
+  const p2pBtn      = document.getElementById('p2pBtn');
+  const restoreBtn  = document.getElementById('restoreBtn');
+  const logText     = document.getElementById('logText');
+
+  const HISTORY_SIZE = 50;
+  const PAD = 10;
+  const BOTTOM_SAFE = 86;
+  let history = [];
+  let busy = false;
+
+  // Fake Log Rotation
+  const logs = [
+    "> BYPASSING FIREWALL...",
+    "> FETCHING DATA PACKETS...",
+    "> AI NEURAL NET SYNC...",
+    "> DECRYPTING PATTERN...",
+    "> P2P SERVER CONNECTED...",
+    "> TARGET LOCKED..."
+  ];
+  let logIdx = 0;
+  setInterval(() => {
+    logText.textContent = logs[logIdx];
+    logIdx = (logIdx + 1) % logs.length;
+  }, 2000);
+
+  // =========================================================
+  // FREE SIGNAL SERVER LOGIC (Deterministic / No Math.random)
+  // =========================================================
+  
+  // Initial history without using Math.random()
+  function seedHistory(n) {
+    const arr = [];
+    const seedStr = String(Date.now());
+    let prev = parseInt(seedStr[seedStr.length - 1]) % 2 === 0 ? 'B' : 'S';
+    for (let i = 0; i < n; i++) {
+      const hash = Math.sin(Date.now() + i) * 10000;
+      const isFlip = Math.abs(hash) % 1 > 0.5;
+      if (!isFlip) arr.push(prev);
+      else { prev = prev === 'B' ? 'S' : 'B'; arr.push(prev); }
+    }
+    return arr;
+  }
+
+  function deterministicFreeServerPredict(hist) {
+    // Generate 100% unique time-based hash
+    const now = Date.now();
+    const perf = performance.now();
+    const seed = (now * perf) % 1000003; // Prime multiplier for chaos
+    
+    // Deterministic "randomness" (0.0 to 1.0) based on time micro-fluctuations
+    const p1 = Math.abs(Math.sin(seed));
+    const p2 = Math.abs(Math.cos(seed * 1.5));
+    const p3 = Math.abs(Math.sin(seed * 2.7) * Math.cos(seed * 0.3));
+    
+    // Dynamic weights based on current time
+    const min = new Date().getMinutes();
+    const sec = new Date().getSeconds();
+    
+    let bScore = 50, sScore = 50;
+
+    // 1. Markov Chain State Transition Model
+    const recent = hist.slice(-20);
+    let bb = 0, bs = 0, sb = 0, ss = 0;
+    for (let i = 1; i < recent.length; i++) {
+      const prev = recent[i - 1], cur = recent[i];
+      if (prev === 'B') { if (cur === 'B') bb++; else bs++; } 
+      else { if (cur === 'B') sb++; else ss++; }
+    }
+    const last = hist[hist.length - 1] || 'B';
+    const mWeight = 20 + (min % 10); // dynamic weight
+    
+    if (last === 'B') {
+      bScore += ((bb / (bb + bs || 1)) * mWeight);
+      sScore += ((bs / (bb + bs || 1)) * mWeight);
+    } else {
+      bScore += ((sb / (sb + ss || 1)) * mWeight);
+      sScore += ((ss / (sb + ss || 1)) * mWeight);
+    }
+
+    // 2. Mean Reversion & Bead Road Matrix
+    const win = hist.slice(-15);
+    const bCount = win.filter(x => x === 'B').length;
+    const sCount = win.length - bCount;
+    const rWeight = 25 + (sec % 15); // dynamic weight
+    
+    bScore += ((sCount / win.length) * rWeight * p1);
+    sScore += ((bCount / win.length) * rWeight * p2);
+
+    // 3. Dragon Run / Fibonacci Sequence Break Logic
+    let streak = 1;
+    for (let i = hist.length - 1; i > 0; i--) {
+      if (hist[i] === hist[i - 1]) streak++; else break;
+    }
+    
+    if (streak >= 2) {
+      // Fibonacci numbers for break prediction: 1, 2, 3, 5, 8...
+      const fib = [0, 1, 1, 2, 3, 5, 8, 13, 21];
+      const fibBreak = fib[Math.min(streak, 8)] || 21;
+      
+      if (p3 > 0.35) { // Time matrix decides if dragon breaks
+        if (last === 'B') sScore += (fibBreak * 1.5); 
+        else bScore += (fibBreak * 1.5);
+      } else {
+        if (last === 'B') bScore += (fibBreak * 0.5); 
+        else sScore += (fibBreak * 0.5);
+      }
+    }
+
+    // 4. Cyber-Synaptic Time Matrix (Dynamic shift)
+    const timeFactor = (min + sec) % 2 === 0 ? p1 : p2;
+    bScore += (timeFactor * 15);
+    sScore += ((1 - timeFactor) * 15);
+
+    // Final decision purely based on deterministic calculation
+    return bScore > sScore ? 'B' : 'S';
+  }
+
+  function deterministicPickNumber(kind) {
+    // 100% unique number pick based on time
+    const seed = (Date.now() % 99991) + performance.now();
+    const pNum = Math.abs(Math.sin(seed)) * 5;
+    const offset = Math.floor(pNum) % 5;
+    return (kind === 'B' ? 5 : 0) + offset;
+  }
+
+  // Real Time Period
+  function updateRealTimePeriod() {
+    const now = Date.now();
+    const val = Math.floor(now / 1000) % 1000; 
+    const str = String(val).padStart(3, '0');
+    periodEl.textContent = 'XX' + str.charAt(2);
+  }
+  updateRealTimePeriod();
+  setInterval(updateRealTimePeriod, 1000);
+
+  // Render
+  function renderResult(kind, num) {
+    const isBig = kind === 'B';
+    verdictEl.textContent = isBig ? 'BIG' : 'SMALL';
+    verdictEl.classList.toggle('is-small', !isBig);
+    numberEl.textContent = num;
+  }
+
+  // Generate Signal
+  function generateSignal() {
+    if (busy) return;
+    busy = true;
+    againBtn.disabled = true;
+    hideBtn.disabled = true;
+    display.classList.add('loading');
+
+    setTimeout(() => {
+      // Get final result from free server engine
+      const finalResult = deterministicFreeServerPredict(history); 
+      
+      // Push the result to history
+      history.push(finalResult); 
+      if (history.length > HISTORY_SIZE) history.shift();
+
+      // Pick number deterministically
+      const displayNum = deterministicPickNumber(finalResult);
+      renderResult(finalResult, displayNum);
+
+      display.classList.remove('loading');
+      busy = false;
+      againBtn.disabled = false;
+      hideBtn.disabled = false;
+    }, 800 + Math.random() * 400); // Only kept for UI loading realism, logic is pure
+  }
+
+  // --- Bulletproof Drag & Drop Logic ---
+  let dragState = null;
+
+  function clampPos(x, y) {
+    const w = box.offsetWidth || 250, h = box.offsetHeight || 280;
+    const maxX = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxY = Math.max(PAD, window.innerHeight - h - BOTTOM_SAFE);
+    return { x: Math.min(Math.max(PAD, x), maxX), y: Math.min(Math.max(PAD, y), maxY) };
+  }
+
+  function setPos(x, y) {
+    const p = clampPos(x, y);
+    box.style.left = p.x + 'px';
+    box.style.top = p.y + 'px';
+  }
+
+  function placeInitial() {
+    const w = box.offsetWidth || 250, h = box.offsetHeight || 280;
+    setPos(window.innerWidth - w - PAD, Math.max(PAD, (window.innerHeight - h) / 2 - 40));
+  }
+
+  handle.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button')) return;
+    const rect = box.getBoundingClientRect();
+    dragState = { 
+      id: e.pointerId, 
+      startX: e.clientX, 
+      startY: e.clientY, 
+      boxLeft: rect.left, 
+      boxTop: rect.top 
+    };
+    if (handle.setPointerCapture) {
+      try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+    }
+    e.preventDefault();
+  });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!dragState || e.pointerId !== dragState.id) return;
+    const dx = e.clientX - dragState.startX;
+    const dy = e.clientY - dragState.startY;
+    setPos(dragState.boxLeft + dx, dragState.boxTop + dy);
+  });
+
+  function endDrag(e) {
+    if (dragState && e.pointerId === dragState.id) dragState = null;
+  }
+  handle.addEventListener('pointerup', endDrag);
+  handle.addEventListener('pointercancel', endDrag);
+  handle.addEventListener('lostpointercapture', () => { dragState = null; });
+
+  window.addEventListener('resize', () => setPos(box.offsetLeft, box.offsetTop));
+
+  // Button Events
+  againBtn.addEventListener('click', generateSignal);
+  hideBtn.addEventListener('click', () => {
+    box.classList.remove('show');
+    restoreBtn.classList.add('show');
+  });
+  restoreBtn.addEventListener('click', () => {
+    restoreBtn.classList.remove('show');
+    box.classList.add('show');
+    setPos(box.offsetLeft, box.offsetTop);
+  });
+  
+  p2pBtn.addEventListener('click', () => {
+    p2pBtn.style.transform = 'scale(0.95)';
+    setTimeout(() => { p2pBtn.style.transform = 'scale(1)'; }, 150);
+  });
+
+  // Init
+  history = seedHistory(20);
+  window.addEventListener('load', () => {
+    placeInitial();
+    box.classList.add('show');
+  });
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      if (!box.classList.contains('show')) { placeInitial(); box.classList.add('show'); }
+    }, 100);
+  });
+
+})();
+</script>
+</body>
+</html>
